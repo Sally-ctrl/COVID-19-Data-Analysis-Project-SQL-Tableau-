@@ -1,2 +1,57 @@
-# COVID-19-Data-Analysis-Project-SQL-Tableau-
-Exploratory data analysis of global COVID-19 trends using SQL for data cleaning/querying and Tableau for interactive dashboard visualization.
+# COVID-19 Data Exploration & Dashboard
+
+Exploratory SQL analysis of global COVID-19 case, death, and vaccination data, visualized in Tableau.
+
+## Data
+
+- `CovidDeaths.csv` — daily cases, deaths, and population by location
+- `CovidVaccinations.csv` — daily vaccination records by location
+
+## Tools
+
+- **SQL Server (T-SQL)** for data cleaning, aggregation, and analysis
+- **Tableau** for dashboarding and visualization
+
+## SQL Analysis
+
+All queries are in [`Queries.sql`](./Queries.sql). Highlights include:
+
+- Total cases vs. total deaths (death percentage) by country
+- Total cases vs. population (infection percentage) by country
+- Countries ranked by highest infection rate relative to population
+- Countries ranked by highest death count
+- Global daily totals (cases, deaths, death percentage)
+- Rolling vaccinated population over time using a window function (`SUM() OVER (PARTITION BY ... ORDER BY ...)`), implemented both as a CTE and as a temp table
+- Death rate before vs. after each country's vaccination campaign began, using each country's first valid vaccination date as the cutoff
+
+## Dashboard 1 — Global Overview
+
+![Dashboard 1](./dashboard1.jpeg)
+
+Four views summarizing the global picture:
+
+- **Death Count by Continent** — bar chart of total deaths per continent. Europe leads (~1M), followed by North America, South America, Asia, and Africa, with Oceania near zero.
+- **Percent Population Infected Per Country** — world map colored by cumulative infection rate (0–17.13%). The US and much of Europe stand out as the most heavily infected relative to population.
+- **% Population Vaccinated over time** (China, Egypt, UK, USA) — line chart of the rolling vaccinated share of each population. Vaccination only takes off around January 2021, with the UK and US reaching ~68% and China ~12.8% by the end of the period.
+- **% Population Infected over time** (same four countries) — the US climbs to ~9.8% and the UK to ~6.5%, while Egypt (0.21%) and China (0.007%) stay near zero (see notes below).
+
+## Dashboard 2 — Death Rate Before vs. After Vaccination Rollout
+
+![Dashboard 2](./dashboard_2.jpeg)
+
+Compares each country's death rate (deaths per confirmed case) in the period before its first recorded vaccination vs. after, for China, the UK, and the US. The results differ by country: China's death rate dropped sharply (4.77% → 0.64%), the US stayed essentially flat (1.80% → 1.76%), and the UK's rose (2.65% → 3.42%) This is a cutoff-based comparison capturing many overlapping factors (variants, testing coverage, reporting lags), not a measure of vaccine effectiveness in isolation. The exact values can be reproduced with the verification query in [`Queries.sql`](./Queries.sql):
+
+| Location | DeathRate BeforeVax | DeathRate AfterVax |
+|---|---|---|
+| China | 4.77% | 0.64% |
+| United Kingdom | 2.65% | 3.42% |
+| United States | 1.80% | 1.76% |
+
+Egypt is excluded from this dashboard only: its `new_vaccinations` field is empty in the source data, so no first-vaccination date could be established to split the before/after periods.
+
+## Notes on the Data
+
+- **Egypt** — vaccination figures are understated due to reporting gaps: only 4 sparse `total_vaccinations` snapshots exist for the entire window (Jan–Apr 2021).
+- **China** — near-zero percentages come down to an enormous population denominator (~1.4B) combined with strict early lockdowns suppressing case growth.
+
+
