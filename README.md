@@ -1,5 +1,10 @@
-# COVID-19 Data Exploration & Dashboard
+# SQL Data Analysis Portfolio
+Two SQL projects: exploratory analysis of global COVID-19 data (visualized in Tableau), and a data cleaning project on a raw Nashville housing dataset.
+## Contents
+- [COVID-19 Data Exploration & Dashboard](#covid-19-data-exploration--dashboard)
+- [Nashville Housing Data Cleaning](#nashville-housing-data-cleaning)
 
+## COVID-19 Data Exploration & Dashboard
 Exploratory SQL analysis of global COVID-19 case, death, and vaccination data, visualized in Tableau.
 
 ## Data
@@ -54,4 +59,39 @@ Egypt is excluded from this dashboard only: its `new_vaccinations` field is empt
 - **Egypt** — vaccination figures are understated due to reporting gaps: only 4 sparse `total_vaccinations` snapshots exist for the entire window (Jan–Apr 2021).
 - **China** — near-zero percentages come down to an enormous population denominator (~1.4B) combined with strict early lockdowns suppressing case growth.
 
+Nashville Housing Data Cleaning
+
+SQL-only data cleaning project on a raw Nashville housing sales dataset — standardizing formats, filling missing values, splitting compound fields, removing duplicates, and dropping unused columns.
+
+Data
+
+NashvilleHousing — property sale records including ParcelID, PropertyAddress, SaleDate, SalePrice, OwnerName, OwnerAddress, SoldAsVacant, and related fields.
+
+Tools
+
+SQL Server (T-SQL)
+
+Cleaning Steps
+
+All queries are in NashvilleQueries.sql. Steps performed, in order:
+
+1. Populate missing PropertyAddress Some rows had a NULL PropertyAddress. Since ParcelID uniquely identifies a property, a self-join on ParcelID (excluding a row matching itself via UniqueID) was used to pull the address from another row for the same parcel:
+
+sql
+UPDATE a
+SET PropertyAddress = ISNULL(a.PropertyAddress, b.PropertyAddress)
+FROM NashvilleHousing a
+JOIN NashvilleHousing b
+    ON a.ParcelID = b.ParcelID
+    AND a.UniqueID <> b.UniqueID
+
+2. Split PropertyAddress into Address / City PropertyAddress was stored as a single comma-separated string. Split into PropertySplitAddress and PropertySplitCity using SUBSTRING + CHARINDEX.
+
+3. Split OwnerAddress into Address / City / State OwnerAddress had three comma-separated parts. Split into OwnerSplitAddress, OwnerSplitCity, OwnerSplitState using PARSENAME (after swapping commas for periods, since PARSENAME only splits on periods).
+
+4. Standardize SoldAsVacant Added SoldAsVacantText, converting the existing 0/1 bit values into readable 'Yes'/'No' labels via a CASE statement.
+
+5. Remove duplicate rows Used ROW_NUMBER() OVER (PARTITION BY ParcelID, PropertyAddress, SalePrice, SaleDate, LegalReference ORDER BY UniqueID) inside a CTE to identify exact duplicate sale records (same parcel, address, price, date, and legal reference). Rows with row_num > 1 were confirmed, then deleted.
+
+6. Drop unused columns Removed the original OwnerAddress, TaxDistrict, and PropertyAddress columns after their cleaned/split replacements were created and verified.
 
