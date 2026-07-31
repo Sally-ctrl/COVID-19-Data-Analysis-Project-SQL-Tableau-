@@ -101,7 +101,3 @@ Used `ROW_NUMBER() OVER (PARTITION BY ParcelID, PropertyAddress, SalePrice, Sale
 **6. Drop unused columns**
 Removed the original `OwnerAddress`, `TaxDistrict`, and `PropertyAddress` columns after their cleaned/split replacements were created and verified.
 
-### Notes
-
-- `SoldAsVacant` was already stored as `bit` (0/1) rather than mixed text (Y/N/Yes/No), so the standard "standardize Y/N" step from most tutorials on this dataset didn't apply here — the type already enforced a consistent format.
-- Original columns were kept until their replacements were verified, then dropped in a single pass at the end rather than immediately after each split.
