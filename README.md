@@ -102,53 +102,51 @@ Used `ROW_NUMBER() OVER (PARTITION BY ParcelID, PropertyAddress, SalePrice, Sale
 
 **6. Drop unused columns**
 Removed the original `OwnerAddress`, `TaxDistrict`, and `PropertyAddress` columns after their cleaned/split replacements were created and verified.
-
-Movies Budget/Gross Correlation Analysis
+## Movies Budget/Gross Correlation Analysis
 
 Python (pandas/seaborn/matplotlib) exploratory analysis of a movies dataset, investigating which numeric features correlate most strongly with box office gross revenue.
 
-Data
+### Data
 
-movies.csv — film records including name, rating, genre, year, released, score, votes, director, writer, star, country, budget, gross, company, and runtime.
+`movies.csv` — film records including name, rating, genre, year, released, score, votes, director, writer, star, country, budget, gross, company, and runtime.
 
-Tools
+### Tools
 
 Python — pandas, numpy, seaborn, matplotlib
 
-Analysis Steps
+### Analysis Steps
 
-All code is in Protofolio.py. Steps performed, in order:
+All code is in `Protofolio.py`. Steps performed, in order:
 
-1. Missing value check Looped through every column, calculating the percentage of NaN values per column using np.mean(df[col].isnull()), to identify which fields (e.g. budget, gross) had meaningful gaps before proceeding.
+**1. Missing value check**
+Looped through every column, calculating the percentage of NaN values per column using `np.mean(df[col].isnull())`, to identify which fields (e.g. `budget`, `gross`) had meaningful gaps before proceeding.
 
-2. Data cleaning
+**2. Data cleaning**
+- Filled missing `budget`/`gross` values with 0 and cast both columns to `int64` (originally `float64` to accommodate NaNs).
+- Extracted a clean 4-digit year (`year_correct`) from the `released` column, since the existing `year` column didn't always match the actual release date.
+- Sorted the dataset by `gross` (descending) to sanity-check top performers.
+- Removed exact duplicate rows with `drop_duplicates()`.
 
-Filled missing budget/gross values with 0 and cast both columns to int64 (originally float64 to accommodate NaNs).
-Extracted a clean 4-digit year (year_correct) from the released column, since the existing year column didn't always match the actual release date.
-Sorted the dataset by gross (descending) to sanity-check top performers.
-Removed exact duplicate rows with drop_duplicates().
+**3. Budget vs. gross scatter plot**
+Plotted `budget` against `gross` to visually inspect the relationship, styled with semi-transparent, outlined markers so overlapping points reveal density rather than blending into a solid mass.
 
-3. Budget vs. gross scatter plot Plotted budget against gross to visually inspect the relationship, styled with semi-transparent, outlined markers so overlapping points reveal density rather than blending into a solid mass.
+**4. Regression plot**
+Used `sns.regplot()` to overlay a fitted trend line (with confidence interval) on the budget/gross scatter, visually confirming the strength of the relationship suggested by the raw scatter plot.
 
-4. Regression plot Used sns.regplot() to overlay a fitted trend line (with confidence interval) on the budget/gross scatter, visually confirming the strength of the relationship suggested by the raw scatter plot.
+![Budget vs Gross Regression Plot](movies_regplot.jpeg)
 
-Show Image
+**5. Correlation matrix — numeric features only**
+Computed `df.corr()` across the naturally numeric columns (year, score, votes, budget, gross, runtime) and visualized it as a `seaborn` heatmap. Budget and gross showed the strongest relationship (0.75), followed by votes and gross (0.63).
 
-This chart shows every film as a point (budget on the x-axis, gross on the y-axis), with a fitted regression line running through them. The upward slope confirms the positive correlation visually: as budget increases, gross tends to increase too. The shaded band around the line is the confidence interval — narrower near the middle of the data (where most points are) and wider toward the high-budget end (where there are fewer films to base the trend on).
+![Correlation Matrix - Numeric Features](movies_correlation_numeric.jpeg)
 
-5. Correlation matrix — numeric features only Computed df.corr() across the naturally numeric columns (year, score, votes, budget, gross, runtime) and visualized it as a seaborn heatmap. Budget and gross showed the strongest relationship (0.75), followed by votes and gross (0.63).
+**6. Correlation matrix — all features, numerized**
+To include categorical fields (director, writer, star, company, genre, etc.) in the analysis, converted every text column to pandas' `category` dtype, then to integer codes via `.cat.codes`, producing `df_numerized`. Recomputed the full correlation matrix across all 15 columns.
 
-Show Image
+![Correlation Matrix - All Features, Numerized](movies_correlation_numerized.jpeg)
 
+### Key Findings
 
-6. Correlation matrix — all features, numerized To include categorical fields (director, writer, star, company, genre, etc.) in the analysis, converted every text column to pandas' category dtype, then to integer codes via .cat.codes, producing df_numerized. Recomputed the full correlation matrix across all 15 columns.
-
-Show Image
-
-Same idea as the previous heatmap, but expanded to all 15 columns by converting text fields (director, writer, star, company, country, genre, name) into numeric category codes. The strongest relationships remain budget/gross (0.75) and votes/gross (0.63) — the numerized categorical columns don't show any meaningful correlation with gross or budget, which is expected (see Notes below).
-
-Key Findings
-Budget and gross are the strongest correlated pair (0.75) — bigger-budget films tend to earn more, though the relationship is loose rather than strict (plenty of high-budget underperformers and low-budget hits).
-Votes and gross (0.63) and votes and budget (0.49) were the next strongest — more heavily-voted (i.e. more-watched/talked-about) films tend to have bigger budgets and bigger grosses.
-Categorical fields converted to numeric codes (director, writer, star, company, country, genre) showed negligible correlation with gross or budget — expected, since integer codes assigned to categories are arbitrary IDs, not meaningful rankings, so correlations involving them carry little statistical weight.
-
+- Budget and gross are the strongest correlated pair (0.75) — bigger-budget films tend to earn more, though the relationship is loose rather than strict (plenty of high-budget underperformers and low-budget hits).
+- Votes and gross (0.63) and votes and budget (0.49) were the next strongest — more heavily-voted (i.e. more-watched/talked-about) films tend to have bigger budgets and bigger grosses.
+- Categorical fields converted to numeric codes (director, writer, star, company, country, genre) showed negligible correlation with gross or budget — expected, since integer codes assigned to categories are arbitrary IDs, not meaningful rankings, so correlations involving them carry little statistical weight.
